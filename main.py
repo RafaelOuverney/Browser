@@ -30,7 +30,7 @@ class MainWindow(QMainWindow):
         reload_btn.triggered.connect(self.browser.reload)
         navbar.addAction(reload_btn)
 
-        home_btn = QAction(QIcon('icons/home.png'), 'Home', self)
+        home_btn = QAction(QIcon('./icons/home.png'), 'Home', self)
         home_btn.triggered.connect(self.navigate_home)
         navbar.addAction(home_btn)
 
@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
                 border: none;
             }
             QAction {
-                color: white;
+                color: black;
             }
             QLineEdit {
                 border: 2px solid #555;
