@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import *
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
+        self.setWindowIcon(QIcon("Paper-Bowser-icon.png"))
+        self.setWindowTitle("Bowser")
         self.browser = QWebEngineView()
         self.browser.setUrl(QUrl('http://www.google.com'))
         self.setCentralWidget(self.browser)
