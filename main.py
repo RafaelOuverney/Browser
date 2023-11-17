@@ -3,11 +3,15 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtWidgets import *
+from http.cookies import SimpleCookie
+from PyQt5 import QtCore, QtWebSockets, QtNetwork
 
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.tabs = QTabWidget()
+        navbar = QToolBar()
+        self.addToolBar(navbar)
         self.tabs.setDocumentMode(True)
         self.setWindowIcon(QIcon("Paper-Bowser-icon.png"))
         self.setWindowTitle("Bowser")
@@ -15,8 +19,20 @@ class MainWindow(QMainWindow):
         self.browser.setUrl(QUrl('http://www.google.com'))
         self.setCentralWidget(self.browser)
         self.showMaximized()
+
+
+
+        profile = QWebEngineProfile.defaultProfile()
+        profile.setPersistentCookiesPolicy(QWebEngineProfile.AllowPersistentCookies)
+
+        self.browser.page().fullScreenRequested.connect(
+            lambda request, browser=self.browser: self.handle_fullscreen_requested(
+                request, browser
+            )
+        )
+
         
-        settings = self.browser.settings()
+        settings = profile.settings()
         settings.setAttribute(QWebEngineSettings.PluginsEnabled, True)
         settings.setAttribute(QWebEngineSettings.JavascriptEnabled, True)
         settings.setAttribute(QWebEngineSettings.JavascriptCanOpenWindows, True)
@@ -41,19 +57,7 @@ class MainWindow(QMainWindow):
         settings.setAttribute(QWebEngineSettings.XSSAuditingEnabled, True)
         settings.setAttribute(QWebEngineSettings.WebRTCPublicInterfacesOnly, True)
 
-        self.browser.page().fullScreenRequested.connect(
-            lambda request, browser=self.browser: self.handle_fullscreen_requested(
-                request, browser
-            )
-        )
-
         
-
-        
-
-        # barra de navegação
-        navbar = QToolBar()
-        self.addToolBar(navbar)
 
         back_btn = QAction(QIcon('icons/back.png'), 'Voltar', self)
         back_btn.triggered.connect(self.browser.back)
@@ -108,6 +112,7 @@ class MainWindow(QMainWindow):
 
     def handle_fullscreen_requested(self, request, browser):
         request.accept()
+        
 
         if request.toggleOn():
             self.showFullScreen()
@@ -120,7 +125,11 @@ class MainWindow(QMainWindow):
             self.navbar.show()
             self.tabs.tabBar().show()
 
+
+
 app = QApplication(sys.argv)
 QApplication.setApplicationName('Navegador')
 window = MainWindow()
 app.exec_()
+
+
