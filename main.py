@@ -13,6 +13,10 @@ ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent,*args, *kwargs)
+        self.status = QStatusBar()
+        self.setStatusBar(self.status)
+        navbar = QToolBar("Navigation")
+        navbar.setMovable(False)
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
         self.tabs.tabBarDoubleClicked.connect(self.tab_open_doubleclick)
@@ -21,9 +25,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.tabCloseRequested.connect(self.close_current_tab)
         self.tabs.setStyleSheet("QTabBar::tab {  height: 20px;}")
         self.setCentralWidget(self.tabs)
-        self.status = QStatusBar()
-        self.setStatusBar(self.status)
-        navbar = QToolBar("Navigation")
+        
+
+        # self.browser = QtWebEngineWidgets.QWebEngineView()
+        # self.browser.iconChanged.connect(self.update_icon)
+        
         self.addToolBar(navbar)
         self.setWindowIcon(QtGui.QIcon("Icons/icon.png"))
         self.setWindowTitle("Bowser")
@@ -72,6 +78,10 @@ class MainWindow(QtWidgets.QMainWindow):
         settings.setAttribute(QWebEngineSettings.ScreenCaptureEnabled, True)
         settings.setAttribute(QWebEngineSettings.XSSAuditingEnabled, True)
         settings.setAttribute(QWebEngineSettings.WebRTCPublicInterfacesOnly, True)
+        settings.setAttribute(QWebEngineSettings.WebGLEnabled, True)
+        
+
+
 
         
 
@@ -92,6 +102,7 @@ class MainWindow(QtWidgets.QMainWindow):
         navbar.addAction(home_btn)
 
         self.url_bar = QLineEdit()
+        self.url_bar.setMaximumWidth(1200)
         self.url_bar.returnPressed.connect(self.navigate_to_url)
         navbar.addWidget(self.url_bar)
 
@@ -107,14 +118,32 @@ class MainWindow(QtWidgets.QMainWindow):
                 color: black;
             }
             QLineEdit {
-                border: 2px solid #555;
-                border-radius: 5px;
+                border: 2px solid #DFDFDF ;
+                border-radius: 15px;
                 padding: 5px;
-                background-color: white;
-                color: grey;
+                background-color: #DFDFDF;
+                color: black;
+                font-family: Arial;
+                text-align: center;
             }
+                           
+            QTabBar::tab {
+                background-color:#DFDFDF;
+                color: black;
+                padding: 6px;
+                
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+        }
         """)
 
+    # def update_icon(self, url):
+    #     response = requests.get(url)
+    #     favicom = response.content
+    #     favicom_image = QImage.fromData(favicom)
+    #     favicom_pixmap = QPixmap.fromImage(favicom_image)
+    #     tabIndex = self.tabs.currentIndex()
+    #     self.tabs.setTabIcon(tabIndex, favicom_pixmap)
 
     def navigate_home(self):
         self.browser.setUrl(QUrl('http://www.google.com'))
@@ -139,6 +168,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tabs.setCurrentIndex(i)
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
         browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
+        # browser.iconChanged.connect(lambda icon, i=i: self.update_icon(icon, i))
 
     def current_tab_changed(self, i):
         qurl = self.tabs.currentWidget().url()
@@ -181,6 +211,7 @@ app = QtWidgets.QApplication(sys.argv)
 window = MainWindow()
 window.show()
 app.exec_()
+
 
 
 
