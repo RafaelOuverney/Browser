@@ -3,33 +3,33 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtWidgets import *
-from http.cookies import SimpleCookie
-from PyQt5 import QtCore, QtWebSockets, QtNetwork
+from PyQt5 import QtCore, QtWebEngineWidgets, QtGui, QtWidgets
+import ctypes
+myappid = 'mycompany.myproduct.subproduct.version' # arbitrary string
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-class MainWindow(QMainWindow):
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
-        self.tabs = QTabWidget()
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         navbar = QToolBar()
         self.addToolBar(navbar)
-        self.tabs.setDocumentMode(True)
-        self.setWindowIcon(QIcon("Paper-Bowser-icon.png"))
+        self.setWindowIcon(QtGui.QIcon("Icons/icon.png"))
         self.setWindowTitle("Bowser")
-        self.browser = QWebEngineView()
-        self.browser.setUrl(QUrl('http://www.google.com'))
+        self.browser = QtWebEngineWidgets.QWebEngineView()
+        self.browser.setUrl(QtCore.QUrl('http://www.google.com'))
         self.setCentralWidget(self.browser)
         self.showMaximized()
 
-
-
         profile = QWebEngineProfile.defaultProfile()
         profile.setPersistentCookiesPolicy(QWebEngineProfile.AllowPersistentCookies)
+        global_settings = QtWebEngineWidgets.QWebEngineSettings.globalSettings()
 
-        self.browser.page().fullScreenRequested.connect(
-            lambda request, browser=self.browser: self.handle_fullscreen_requested(
-                request, browser
-            )
-        )
+        for attr in (
+            QtWebEngineWidgets.QWebEngineSettings.PluginsEnabled,
+            QtWebEngineWidgets.QWebEngineSettings.FullScreenSupportEnabled,
+        ):
+            global_settings.setAttribute(attr, True)
+        self.browser.page().fullScreenRequested.connect(self.FullscreenRequest)
 
         
         settings = profile.settings()
@@ -110,26 +110,21 @@ class MainWindow(QMainWindow):
     def update_url(self, q):
         self.url_bar.setText(q.toString())
 
-    def handle_fullscreen_requested(self, request, browser):
+    @QtCore.pyqtSlot("QWebEngineFullScreenRequest")
+    def FullscreenRequest(self, request):
         request.accept()
-        
-
         if request.toggleOn():
-            self.showFullScreen()
-            self.statusBar().hide()
-            self.navbar.hide()
-            self.tabs.tabBar().hide()
+            self.browser.setParent(None)
+            self.browser.showFullScreen()
         else:
-            self.showNormal()
-            self.statusBar().show()
-            self.navbar.show()
-            self.tabs.tabBar().show()
+            self.setCentralWidget(self.browser)
+            self.browser.showNormal()
 
 
 
-app = QApplication(sys.argv)
-QApplication.setApplicationName('Navegador')
+app = QtWidgets.QApplication(sys.argv)
 window = MainWindow()
+window.show()
 app.exec_()
 
 
