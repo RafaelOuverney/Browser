@@ -3,21 +3,36 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtWidgets import *
-from PyQt5 import QtCore, QtWebEngineWidgets, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWebEngineWidgets, QtGui, QtWidgets, QtWebEngineCore
 import ctypes
 myappid = 'mycompany.myproduct.subproduct.version' # arbitrary string
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
+
+
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        navbar = QToolBar()
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent,*args, *kwargs)
+        self.tabs = QTabWidget()
+        self.tabs.setDocumentMode(True)
+        self.tabs.tabBarDoubleClicked.connect(self.tab_open_doubleclick)
+        self.tabs.currentChanged.connect(self.current_tab_changed)
+        self.tabs.setTabsClosable(True)
+        self.tabs.tabCloseRequested.connect(self.close_current_tab)
+        self.tabs.setStyleSheet("QTabBar::tab {  height: 20px;}")
+        self.setCentralWidget(self.tabs)
+        self.status = QStatusBar()
+        self.setStatusBar(self.status)
+        navbar = QToolBar("Navigation")
         self.addToolBar(navbar)
         self.setWindowIcon(QtGui.QIcon("Icons/icon.png"))
         self.setWindowTitle("Bowser")
         self.browser = QtWebEngineWidgets.QWebEngineView()
-        self.browser.setUrl(QtCore.QUrl('http://www.google.com'))
-        self.setCentralWidget(self.browser)
+        # self.browser.setUrl(QtCore.QUrl('http://www.google.com'))
+        self.add_new_tab(QUrl('http://www.google.com'), 'Homepage')
+        self.setCentralWidget(self.tabs)
+        navbar.addSeparator()
+        
         self.showMaximized()
 
         profile = QWebEngineProfile.defaultProfile()
@@ -29,7 +44,8 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWebEngineWidgets.QWebEngineSettings.FullScreenSupportEnabled,
         ):
             global_settings.setAttribute(attr, True)
-        self.browser.page().fullScreenRequested.connect(self.FullscreenRequest)
+        for index in range(self.tabs.count()):
+            self.tabs.widget(index).page().fullScreenRequested.connect(self.FullscreenRequest)
 
         
         settings = profile.settings()
@@ -60,15 +76,15 @@ class MainWindow(QtWidgets.QMainWindow):
         
 
         back_btn = QAction(QIcon('icons/back.png'), 'Voltar', self)
-        back_btn.triggered.connect(self.browser.back)
+        back_btn.triggered.connect(lambda: self.tabs.currentWidget().back())
         navbar.addAction(back_btn)
 
         forward_btn = QAction(QIcon('icons/forward.png'), 'Avançar', self)
-        forward_btn.triggered.connect(self.browser.forward)
+        forward_btn.triggered.connect(lambda: self.tabs.currentWidget().forward())
         navbar.addAction(forward_btn)
 
         reload_btn = QAction(QIcon('icons/reload.png'), 'Recarregar', self)
-        reload_btn.triggered.connect(self.browser.reload)
+        reload_btn.triggered.connect(lambda: self.tabs.currentWidget().reload())
         navbar.addAction(reload_btn)
 
         home_btn = QAction(QIcon('./icons/home.png'), 'Home', self)
@@ -110,15 +126,54 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_url(self, q):
         self.url_bar.setText(q.toString())
 
+    def tab_open_doubleclick(self, i):
+        if i == -1:
+            self.add_new_tab()
+    
+    def add_new_tab(self, qurl=None, label="Blank"):
+        if qurl is None:
+            qurl = QUrl('http://www.google.com')
+        browser = QWebEngineView()
+        browser.setUrl(qurl)
+        i = self.tabs.addTab(browser, label)
+        self.tabs.setCurrentIndex(i)
+        browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
+        browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
+
+    def current_tab_changed(self, i):
+        qurl = self.tabs.currentWidget().url()
+        # self.update_title(self.tabs.currentWidget())
+        # self.update_urlbar(qurl, self.tabs.currentWidget())
+
+    def close_current_tab(self, i):
+        if self.tabs.count() < 2:
+            return
+        self.tabs.removeTab(i)
+
+    def update_title(self, browser):
+        if browser != self.tabs.currentWidget():
+            return
+        title = self.browser.page().title()
+        self.setWindowTitle("%s - Bowser" % title)
+    
+    def update_urlbar(self, q, browser=None):
+        if browser != self.tabs.currentWidget():
+            return
+        self.url_bar.setText(q.toString())
+        self.url_bar.setCursorPosition(0)
+
     @QtCore.pyqtSlot("QWebEngineFullScreenRequest")
     def FullscreenRequest(self, request):
         request.accept()
         if request.toggleOn():
-            self.browser.setParent(None)
-            self.browser.showFullScreen()
+            self.tabs.setParent(None)
+            self.tabs.showFullScreen()
+            self.tabs.setStyleSheet("QTabBar::tab { height: 0px;}")
+
         else:
-            self.setCentralWidget(self.browser)
-            self.browser.showNormal()
+            self.tabs.showNormal()
+            self.setCentralWidget(self.tabs)
+            self.tabs.setStyleSheet("QTabBar::tab {  height: 20px;}")
 
 
 
@@ -126,5 +181,8 @@ app = QtWidgets.QApplication(sys.argv)
 window = MainWindow()
 window.show()
 app.exec_()
+
+
+
 
 
