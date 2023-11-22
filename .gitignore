@@ -1,4 +1,4 @@
 git rm --cached ./build
 git rm --cached ./dist
-build/
-dist/
+/build
+/dist
