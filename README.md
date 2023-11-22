@@ -1,7 +1,7 @@
 # Python Web Bowser
 
 ## Description
-This is a simple web browser application built using Python. It provides basic browsing functionality and can be a great starting point for anyone looking to understand how web browsers work.
+This is a simple work in progress web browser application built using Python. It provides basic browsing functionality and can be a great starting point for anyone looking to understand how web browsers work.
 
 ## Features
 - Navigate to a URL
