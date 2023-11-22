@@ -79,7 +79,7 @@ class MainWindow(QtWidgets.QMainWindow):
         settings.setAttribute(QWebEngineSettings.XSSAuditingEnabled, True)
         settings.setAttribute(QWebEngineSettings.WebRTCPublicInterfacesOnly, True)
         settings.setAttribute(QWebEngineSettings.WebGLEnabled, True)
-        
+
 
 
 
@@ -131,9 +131,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 background-color:#DFDFDF;
                 color: black;
                 padding: 6px;
-                
+                margin-right: 5px;
                 border-top-left-radius: 6px;
                 border-top-right-radius: 6px;
+                
         }
         """)
 
